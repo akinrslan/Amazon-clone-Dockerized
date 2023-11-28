@@ -25,9 +25,23 @@ pipeline {
               }
             }
         }
-        stage('Build docker image') {
-            steps {  
-                sh 'docker build -t $APP_NAME:$BUILD_NUMBER .'
+       stage('Build docker image') {
+            steps {
+                script {
+                    // Increase file descriptor limit
+                    sh 'ulimit -n 4096'
+
+                    // Clear Yarn cache
+                    sh 'yarn cache clean'
+
+                    // Run yarn install with error handling
+                    catchError {
+                        sh 'yarn install'
+                    }
+
+                    // Build Docker image
+                    sh 'docker build -t $APP_NAME:$BUILD_NUMBER .'
+                }
             }
         }
         stage('login to dockerhub') {
